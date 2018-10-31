@@ -8,13 +8,13 @@ from jigsaw.utils.permutations import hamming_distance_matrix, index_from_distan
 
 
 def test_hamming_distance_matrix():
-    x = np.array([[1, 2, 3], [2, 3, 4], [4, 3, 2], [1, 2, 2]])
-    y = np.array([1, 2, 3])
+    y = np.array([[1, 2, 3], [2, 3, 4], [4, 3, 2], [1, 2, 2]])
+    x = np.array([1, 2, 3])
 
     expected_distance = np.array([0, 3, 3, 1]) 
     distance = hamming_distance_matrix(x, y)
 
-    assert expected_distance == distance
+    assert (expected_distance == distance).all()
 
 def test_index_from_distance_matrix():
     distance_matrix = np.array([[0, 1, 2, 3, 2, 8],
@@ -30,4 +30,5 @@ def test_index_from_distance_matrix():
 def test_create_permutations():
     permutations = create_permutations(5)
     for i in range(permutations.shape[0]):
-        assert hamming_distance_matrix(permutations[i, :], permutations[:, :]).sum() == 4 * 8
+        # all permutation should be totally different than the others but equal to itself
+        assert hamming_distance_matrix(permutations[i, :], permutations[:, :]).sum() == (5 - 1) * 9 

@@ -40,7 +40,7 @@ class AlexNet(torch.nn.Module):
 
 
 class JigsawNet(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, number_of_permutations):
         super(JigsawNet, self).__init__()
         self.conv_backbone = torch.nn.Sequential(
             torch.nn.Conv2d(3, 96, kernel_size=11, stride=2, padding=2),
@@ -66,8 +66,8 @@ class JigsawNet(torch.nn.Module):
             torch.nn.Dropout(),
             torch.nn.Linear(4608, 4096),
             torch.nn.ReLU(inplace=True),
-            torch.nn.Linear(4096, 100),
-            torch.nn.Softmax()
+            torch.nn.Linear(4096, number_of_permutations),
+            torch.nn.Softmax(dim=-1)
         )
 
     def forward(self, x):

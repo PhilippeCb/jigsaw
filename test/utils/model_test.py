@@ -14,10 +14,5 @@ class TestJigsawNet():
         net = JigsawNet(200)
         output = net.forward(x)
 
-        assert output.shape = (20, 200)
-
-
-
-
-if __name__=="__main__":
+        assert output.shape == (20, 200)
     
