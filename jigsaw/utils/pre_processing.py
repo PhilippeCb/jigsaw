@@ -13,13 +13,25 @@ class Image_Preprocessor():
         self.number_of_tiles = number_of_tiles_per_side**2
         self.size_of_tiles = size_of_tiles
 
-    def jitter_colors(self, puzzle):
-        return(image)
 
-    def create_puzzle(self, image):
+    def create_puzzle(self, image, jitter_colours=True, normalize=True):
         """
         For simplicity this code assumes the image is squared.
         """
+        epsilon = 10**(-8)
+        def get_tile(numpy_image, left, top, size_of_tiles, jitter_colours=False):
+            if jitter_colours:
+                tile = np.zeros((self.size_of_tiles, self.size_of_tiles, 3))
+                for c in range(3):
+                    left_plus_offset = left + 1 + np.random.randint(4)
+                    top_plus_offset = top + 1 + np.random.randint(4)
+                    tile[:, :, c] =  numpy_image[left_plus_offset: left_plus_offset + size_of_tiles, 
+                                                 top_plus_offset: top_plus_offset + size_of_tiles, c] 
+                save_array_to_image(tile, "../../test/oiseau_random_crop_{}.jpg".format(left))
+            else:
+                tile = numpy_image[left: left + size_of_tiles, 
+                                   top: top + size_of_tiles] 
+            return tile
 
         image_size = image.size[1]
         puzzle = np.zeros((self.number_of_tiles, self.size_of_tiles, self.size_of_tiles, 3))
@@ -27,17 +39,24 @@ class Image_Preprocessor():
 
         size_of_possible_tiles = np.int(image_size/self.number_of_tiles_per_side)
         leeway = size_of_possible_tiles - self.size_of_tiles
-        #print(size_of_possible_tiles, self.size_of_tiles, leeway)
+
+        # We reduce leeway to enable spatial jittering of colours
+        if jitter_colours:
+            leeway -= 4
+
         top_left_of_tiles = np.arange(self.number_of_tiles_per_side)*size_of_possible_tiles 
 
+        # easier for region selection
         numpy_image = np.array(image)
 
         for i, left in enumerate(top_left_of_tiles):
             for j, top in enumerate(top_left_of_tiles):
                 left_plus_offset = left + np.random.randint(leeway)
                 top_plus_offset = top + np.random.randint(leeway)
-                puzzle[i*self.number_of_tiles_per_side+j] = numpy_image[left_plus_offset: left_plus_offset + self.size_of_tiles, 
-                                          top_plus_offset: top_plus_offset + self.size_of_tiles] 
+                tile = get_tile(numpy_image, left_plus_offset, top_plus_offset, self.size_of_tiles, jitter_colours)
+                if normalize:
+                    tile = (tile - np.mean(tile))/(np.std(tile) + epsilon)
+                puzzle[i*self.number_of_tiles_per_side+j] = tile
         return(puzzle)
 
 
@@ -76,5 +95,5 @@ if __name__=="__main__":
     #image_preprocessor_mine.create_puzzle(image)
     image = image_preprocessor_mine.resize_keep_aspect_ratio(image)
     image = image_preprocessor_mine.square_crop_image(image)
-    image.save("../../test/oiseau_random_crop.jpg")
-    image_preprocessor_mine.create_puzzle(image)
+    #image.save("../../test/oiseau_random_crop.jpg")
+    puzzle = image_preprocessor_mine.create_puzzle(image)
