@@ -6,16 +6,20 @@ from jigsaw.utils.image_helper import convert_array_to_image, convert_to_numpy, 
 
 class Image_Preprocessor():
 
-    def __init__(self, size_of_resizing=256, size_of_crop=225, number_of_tiles_per_side=3, size_of_tiles=64):
+    def __init__(self, size_of_resizing=256, size_of_crop=225, number_of_tiles_per_side=3, size_of_tiles=64,
+                 jitter_colours=True, normalize=True, black_and_white_proportion=0.3):
         self.size_of_resizing = size_of_resizing
         self.size_of_crop = size_of_crop
         self.number_of_tiles_per_side = number_of_tiles_per_side
         self.number_of_tiles = number_of_tiles_per_side**2
         self.size_of_tiles = size_of_tiles
+        self.jitter_colours = jitter_colours
+        self.normalize = normalize
+        self.black_and_white_proportion = black_and_white_proportion
 
-    def get_tile(self, numpy_image, left, top, size_of_tiles, jitter_colours=False,random_seed=None):
+    def get_tile(self, numpy_image, left, top, size_of_tiles, random_seed=None):
         np.random.seed(random_seed)
-        if jitter_colours:
+        if self.jitter_colours:
             tile = np.zeros((self.size_of_tiles, self.size_of_tiles, 3))
             for c in range(3):
                 left_plus_offset = left + 1 + np.random.randint(4)
@@ -27,36 +31,43 @@ class Image_Preprocessor():
                                top: top + size_of_tiles, :] 
         return tile
 
-    def create_puzzle(self, image, permutation=None, jitter_colours=True, normalize=True, random_seed=None):
+    def _get_top_left_and_leeway(self, image_size):
+        image_size = np.float(image_size[1])
+        size_of_possible_tiles = np.int(image_size/self.number_of_tiles_per_side)
+        leeway = size_of_possible_tiles - self.size_of_tiles
+        # We reduce leeway to enable spatial jittering of colours
+        if self.jitter_colours:
+            leeway -= 4
+        top_left_of_tiles = np.arange(self.number_of_tiles_per_side)*size_of_possible_tiles 
+
+        return(top_left_of_tiles, leeway)
+
+        
+
+    def create_puzzle(self, image, permutation=None, random_seed=None):
         """
         For simplicity this code assumes the image is squared.
         """
         np.random.seed(random_seed)
         epsilon = 10**(-10)
-
-        image_size = image.size[1]
         puzzle = np.zeros((self.number_of_tiles, self.size_of_tiles, self.size_of_tiles, 3))
-        image_size = np.float(image_size)
 
-        size_of_possible_tiles = np.int(image_size/self.number_of_tiles_per_side)
-        leeway = size_of_possible_tiles - self.size_of_tiles
-
-        # We reduce leeway to enable spatial jittering of colours
-        if jitter_colours:
-            leeway -= 4
-
-        top_left_of_tiles = np.arange(self.number_of_tiles_per_side)*size_of_possible_tiles 
+        # preprocess iamges
+        image = self.resize_keep_aspect_ratio(image)
+        image = self.square_crop_image(image)
+        image = self.convert_black_and_white(image)
 
         # easier for region selection
-        numpy_image = np.array(image)
+        numpy_image = convert_to_numpy(image)
 
+        top_left_of_tiles, leeway = self._get_top_left_and_leeway(image.size)
         for i, left in enumerate(top_left_of_tiles):
             for j, top in enumerate(top_left_of_tiles):
                 left_plus_offset = left + np.random.randint(leeway)
                 top_plus_offset = top + np.random.randint(leeway)
-                tile = self.get_tile(numpy_image, left_plus_offset, top_plus_offset, self.size_of_tiles, jitter_colours, random_seed)
-                if normalize:
-                    tile = (tile - np.mean(tile))/(np.std(tile) + epsilon)
+                tile = self.get_tile(numpy_image, left_plus_offset, top_plus_offset, self.size_of_tiles, random_seed)
+                if self.normalize:
+                    tile = (tile - np.mean(tile))/(np.std(tile) + epsilon) + 1
                 puzzle[i*self.number_of_tiles_per_side+j] = tile
 
         if permutation is not None:
@@ -65,6 +76,11 @@ class Image_Preprocessor():
 
         return(puzzle)
 
+    def convert_black_and_white(self, image):
+        if np.random.rand() < self.black_and_white_proportion:
+            return(image.convert('L'))
+        else:
+            return(image)
 
     def resize_keep_aspect_ratio(self, image):
         width, height = image.size
@@ -97,7 +113,8 @@ class Image_Preprocessor():
 if __name__=="__main__":
     #for i in range(100):
     image_preprocessor_mine = Image_Preprocessor()
-    image = read_image("../../test/oiseau.jpg")
+    image = read_image("../data/images/oiseau.jpg")
+    image = image_preprocessor_mine.convert_black_and_white(image)
     #image_preprocessor_mine.create_puzzle(image)
     image = image_preprocessor_mine.resize_keep_aspect_ratio(image)
     image = image_preprocessor_mine.square_crop_image(image)

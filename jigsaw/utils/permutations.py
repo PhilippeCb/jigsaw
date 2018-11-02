@@ -3,11 +3,11 @@ import itertools
 import numpy as np
 
 def read_permutations(path:str):
-    return np.loadtxt(path, delimiter=",")
+    return np.loadtxt(path, delimiter=",", dtype=np.uint8)
 
 def write_permutations(max_number_of_permutation:int):
     permutations = create_permutations(max_number_of_permutation)
-    np.savetxt("{}_permutations.csv".format(max_number_of_permutation), 
+    np.savetxt("../data/{}_permutations.csv".format(max_number_of_permutation), 
                permutations, 
                delimiter=",",
                fmt='% 4d')
@@ -31,7 +31,7 @@ def create_permutations(max_number_of_permutation:int):
     Creates max_number_of_permutation permutations from index 1 to 9
     slow to run this is why we save results to reuse later 
     """
-    permutations_set = list(itertools.permutations([1, 2, 3, 4, 5, 6, 7, 8, 9]))
+    permutations_set = list(itertools.permutations([0, 1, 2, 3, 4, 5, 6, 7, 8]))
     number_of_permutation = len(permutations_set)
     
     #initialisation, pick a random permutation and remove it from the set
@@ -50,3 +50,6 @@ def create_permutations(max_number_of_permutation:int):
         index_permutation = index_from_distance_matrix(distance_matrix[:i+1, :])
 
     return(permutations)
+
+if __name__ == "__main__":
+    write_permutations(100)
