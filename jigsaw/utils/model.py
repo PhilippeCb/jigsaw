@@ -89,5 +89,5 @@ class JigsawNet(torch.nn.Module):
 if __name__=="__main__":
     x = np.random.rand(9, 5, 3, 64, 64)
     x = torch.from_numpy(x).float()
-    net = JigsawNet()
+    net = JigsawNet(100)
     net.forward(x)

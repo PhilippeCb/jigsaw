@@ -13,25 +13,26 @@ class Image_Preprocessor():
         self.number_of_tiles = number_of_tiles_per_side**2
         self.size_of_tiles = size_of_tiles
 
+    def get_tile(self, numpy_image, left, top, size_of_tiles, jitter_colours=False,random_seed=None):
+        np.random.seed(random_seed)
+        if jitter_colours:
+            tile = np.zeros((self.size_of_tiles, self.size_of_tiles, 3))
+            for c in range(3):
+                left_plus_offset = left + 1 + np.random.randint(4)
+                top_plus_offset = top + 1 + np.random.randint(4)
+                tile[:, :, c] =  numpy_image[left_plus_offset: left_plus_offset + size_of_tiles, 
+                                             top_plus_offset: top_plus_offset + size_of_tiles, c] 
+        else:
+            tile = numpy_image[left: left + size_of_tiles, 
+                               top: top + size_of_tiles, :] 
+        return tile
 
-    def create_puzzle(self, image, jitter_colours=True, normalize=True):
+    def create_puzzle(self, image, permutation=None, jitter_colours=True, normalize=True, random_seed=None):
         """
         For simplicity this code assumes the image is squared.
         """
-        epsilon = 10**(-8)
-        def get_tile(numpy_image, left, top, size_of_tiles, jitter_colours=False):
-            if jitter_colours:
-                tile = np.zeros((self.size_of_tiles, self.size_of_tiles, 3))
-                for c in range(3):
-                    left_plus_offset = left + 1 + np.random.randint(4)
-                    top_plus_offset = top + 1 + np.random.randint(4)
-                    tile[:, :, c] =  numpy_image[left_plus_offset: left_plus_offset + size_of_tiles, 
-                                                 top_plus_offset: top_plus_offset + size_of_tiles, c] 
-                save_array_to_image(tile, "../../test/oiseau_random_crop_{}.jpg".format(left))
-            else:
-                tile = numpy_image[left: left + size_of_tiles, 
-                                   top: top + size_of_tiles] 
-            return tile
+        np.random.seed(random_seed)
+        epsilon = 10**(-10)
 
         image_size = image.size[1]
         puzzle = np.zeros((self.number_of_tiles, self.size_of_tiles, self.size_of_tiles, 3))
@@ -53,10 +54,15 @@ class Image_Preprocessor():
             for j, top in enumerate(top_left_of_tiles):
                 left_plus_offset = left + np.random.randint(leeway)
                 top_plus_offset = top + np.random.randint(leeway)
-                tile = get_tile(numpy_image, left_plus_offset, top_plus_offset, self.size_of_tiles, jitter_colours)
+                tile = self.get_tile(numpy_image, left_plus_offset, top_plus_offset, self.size_of_tiles, jitter_colours, random_seed)
                 if normalize:
                     tile = (tile - np.mean(tile))/(np.std(tile) + epsilon)
                 puzzle[i*self.number_of_tiles_per_side+j] = tile
+
+        if permutation is not None:
+            puzzle = puzzle[permutation, :, :, :]
+
+
         return(puzzle)
 
 
@@ -96,4 +102,4 @@ if __name__=="__main__":
     image = image_preprocessor_mine.resize_keep_aspect_ratio(image)
     image = image_preprocessor_mine.square_crop_image(image)
     #image.save("../../test/oiseau_random_crop.jpg")
-    puzzle = image_preprocessor_mine.create_puzzle(image)
+    puzzle = image_preprocessor_mine.create_puzzle(image, np.array([1, 0, 2, 3, 4, 5, 6, 7, 8]))
