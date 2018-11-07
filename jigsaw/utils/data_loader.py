@@ -18,6 +18,7 @@ class DataLoader():
         self.preprocessor = preprocessor
 
         self.number_of_except = 0 
+        self.false_random = np.random.randint(self.number_of_premutations, size=200)
 
     def image_path_generator(self, image_folder_path):
         
@@ -42,12 +43,12 @@ class DataLoader():
                                 self.preprocessor.size_of_tiles,
                                 self.preprocessor.size_of_tiles,
                                 3))
-        batch_permutation = np.zeros((batch_size, self.number_of_premutations))
+        batch_permutation = np.zeros(batch_size)
         for batch in range(batch_size):
             # get permutation groundtruh one encoded
             permutation_index = np.random.randint(self.number_of_premutations) 
+            #permutation_index = self.false_random[batch]
             permutation = self.permutations[permutation_index]
-            permutation_one_hot = 1* (self.range_permutations == permutation_index)
 
             image_path = next(self.get_image_path)
             image = read_image(image_path)
@@ -55,7 +56,7 @@ class DataLoader():
             puzzle = self.preprocessor.create_puzzle(image, permutation)
 
             batch_puzzle[:, batch, :, :, :] = puzzle
-            batch_permutation[batch] = permutation_one_hot
+            batch_permutation[batch] = permutation_index
 
         return(batch_puzzle, batch_permutation)
 

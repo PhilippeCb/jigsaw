@@ -92,7 +92,7 @@ class Test_Image_Preprocessor():
 
 
         for puzzle in puzzle_1:
-            assert np.mean(puzzle) < 10 ** (-10)
+            assert np.abs(np.mean(puzzle) - 1) < 10 ** (-10)
             assert np.abs(np.std(puzzle) - 1) < 100 ** (-5)
 
     def test_convert_black_and_white(self, image_preprocessor_black_and_white):

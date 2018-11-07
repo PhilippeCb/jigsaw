@@ -16,10 +16,11 @@ class Image_Preprocessor():
         self.jitter_colours = jitter_colours
         self.normalize = normalize
         self.black_and_white_proportion = black_and_white_proportion
+        self.black_and_white = False
 
     def get_tile(self, numpy_image, left, top, size_of_tiles, random_seed=None):
         np.random.seed(random_seed)
-        if self.jitter_colours:
+        if self.jitter_colours and not self.black_and_white:
             tile = np.zeros((self.size_of_tiles, self.size_of_tiles, 3))
             for c in range(3):
                 left_plus_offset = left + 1 + np.random.randint(4)
@@ -36,7 +37,7 @@ class Image_Preprocessor():
         size_of_possible_tiles = np.int(image_size/self.number_of_tiles_per_side)
         leeway = size_of_possible_tiles - self.size_of_tiles
         # We reduce leeway to enable spatial jittering of colours
-        if self.jitter_colours:
+        if self.jitter_colours and not self.black_and_white:
             leeway -= 4
         top_left_of_tiles = np.arange(self.number_of_tiles_per_side)*size_of_possible_tiles 
 
@@ -78,8 +79,10 @@ class Image_Preprocessor():
 
     def convert_black_and_white(self, image):
         if np.random.rand() < self.black_and_white_proportion:
+            self.black_and_white = True
             return(image.convert('L'))
         else:
+            self.black_and_white = False
             return(image)
 
     def resize_keep_aspect_ratio(self, image):

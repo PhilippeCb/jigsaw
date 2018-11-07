@@ -67,7 +67,6 @@ class JigsawNet(torch.nn.Module):
             torch.nn.Linear(4608, 4096),
             torch.nn.ReLU(inplace=True),
             torch.nn.Linear(4096, number_of_permutations),
-            torch.nn.Softmax(dim=-1)
         )
 
     def forward(self, x):
