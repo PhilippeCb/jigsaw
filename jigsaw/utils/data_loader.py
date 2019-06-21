@@ -6,7 +6,6 @@ from jigsaw.utils.permutations import read_permutations
 from jigsaw.utils.pre_processing import Image_Preprocessor
 
 
-
 class DataLoader():
     def __init__(self, preprocessor:Image_Preprocessor, image_folder_path:str, permutation_csv_path:str, random_seed=None):
         np.random.seed(random_seed)
@@ -36,7 +35,6 @@ class DataLoader():
                 self.number_of_except += 1
                 yield os.path.join(image_folder_path, image_name)
 
-
     def get_batch(self, batch_size):
         batch_puzzle = np.zeros((self.preprocessor.number_of_tiles, 
                                 batch_size,
@@ -46,8 +44,9 @@ class DataLoader():
         batch_permutation = np.zeros(batch_size)
         for batch in range(batch_size):
             # get permutation groundtruh one encoded
-            permutation_index = np.random.randint(self.number_of_premutations) 
+            permutation_index = np.random.randint(self.number_of_premutations)
             #permutation_index = self.false_random[batch]
+            permutation_index = np.random.randint(2)
             permutation = self.permutations[permutation_index]
 
             image_path = next(self.get_image_path)
@@ -58,7 +57,7 @@ class DataLoader():
             batch_puzzle[:, batch, :, :, :] = puzzle
             batch_permutation[batch] = permutation_index
 
-        return(batch_puzzle, batch_permutation)
+        return batch_puzzle, batch_permutation
 
 if __name__ == "__main__":
     image_processor = Image_Preprocessor()

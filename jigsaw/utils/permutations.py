@@ -1,8 +1,10 @@
 import itertools
 import numpy as np
 
+
 def read_permutations(path:str):
     return np.loadtxt(path, delimiter=",", dtype=np.uint8)
+
 
 def write_permutations(max_number_of_permutation:int):
     permutations = create_permutations(max_number_of_permutation)
@@ -11,19 +13,22 @@ def write_permutations(max_number_of_permutation:int):
                delimiter=",",
                fmt='% 4d')
 
-    return(0)
+    return 0
+
 
 def hamming_distance_matrix(array_a, matrix_b):
     assert len(array_a) == matrix_b.shape[1] 
 
     distance = np.sum((array_a != matrix_b), axis=1)
     
-    return(distance)
+    return distance
+
 
 def index_from_distance_matrix(distance_matrix):
     one_array = np.ones(distance_matrix.shape[0])
     index = np.argmax(np.dot(one_array.T, distance_matrix))
-    return(index)
+    return index
+
 
 def create_permutations(max_number_of_permutation:int):
     """
@@ -48,7 +53,8 @@ def create_permutations(max_number_of_permutation:int):
         distance_matrix[i] = hamming_distance_matrix(permutations[i], np.array(permutations_set))
         index_permutation = index_from_distance_matrix(distance_matrix[:i+1, :])
 
-    return(permutations)
+    return permutations
+
 
 if __name__ == "__main__":
-    write_permutations(100)
+    write_permutations(5)

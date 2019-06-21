@@ -62,8 +62,6 @@ class Test_Image_Preprocessor():
 
     def test_colour_jittering(self, image_preprocessor_instance_class, image_preprocessor_jitter_false, image):
 
-
-
         x = np.random.randint(255, size=(image_preprocessor_instance_class.size_of_crop, 
                                                                 image_preprocessor_instance_class.size_of_crop, 3))
 
@@ -87,9 +85,8 @@ class Test_Image_Preprocessor():
         puzzle_2 = image_preprocessor_normalize_false.create_puzzle(x)
 
         for puzzle in puzzle_2:
-            assert np.mean(puzzle)>1
+            assert np.mean(puzzle) > 1
             assert np.abs(np.std(puzzle)) > 1
-
 
         for puzzle in puzzle_1:
             assert np.abs(np.mean(puzzle) - 1) < 10 ** (-10)
@@ -105,4 +102,29 @@ class Test_Image_Preprocessor():
         y = convert_to_numpy(y)
 
         assert (y[:, :, 0] == y[:, :, 1]).all()
+
+    def test_create_image_from_permutation(self, image_preprocessor_normalize_false, image):
+        image_np = convert_to_numpy(image)
+        size_square = min(image_np.shape[0], image_np.shape[1])
+        image = convert_array_to_image(image_np[:size_square, :size_square, :])
+        puzzle = image_preprocessor_normalize_false.create_puzzle(image)
+        puzzle = np.moveaxis(puzzle, -1, 1)
+
+        new_image = image_preprocessor_normalize_false.create_image_np(puzzle, np.array([0, 1, 2, 3, 4, 5, 6, 7, 8]))
+        new_image = np.moveaxis(new_image, 0, -1)
+        save_array_to_image(new_image, "test_2.png")
+
+        #assert (convert_to_numpy(image) == new_image).all()
+
+        puzzle = image_preprocessor_normalize_false.create_puzzle(image, np.array([1, 0, 2, 3, 4, 5, 6, 7, 8]))
+        puzzle = np.moveaxis(puzzle, -1, 1)
+        new_image = image_preprocessor_normalize_false.create_image_np(puzzle, np.array([0, 1, 2, 3, 4, 5, 6, 7, 8]))
+        new_image = np.moveaxis(new_image, 0, -1)
+        save_array_to_image(new_image, "test.png")
+
+        #assert (convert_to_numpy(image) != new_image).any()
+
+
+
+
 

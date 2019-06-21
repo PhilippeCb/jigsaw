@@ -4,6 +4,7 @@ import torch
 
 from jigsaw.utils.image_helper import convert_array_to_image, convert_to_numpy, read_image, save_array_to_image
 
+
 class Image_Preprocessor():
 
     def __init__(self, size_of_resizing=256, size_of_crop=225, number_of_tiles_per_side=3, size_of_tiles=64,
@@ -25,7 +26,7 @@ class Image_Preprocessor():
             for c in range(3):
                 left_plus_offset = left + 1 + np.random.randint(4)
                 top_plus_offset = top + 1 + np.random.randint(4)
-                tile[:, :, c] =  numpy_image[left_plus_offset: left_plus_offset + size_of_tiles, 
+                tile[:, :, c] = numpy_image[left_plus_offset: left_plus_offset + size_of_tiles,
                                              top_plus_offset: top_plus_offset + size_of_tiles, c] 
         else:
             tile = numpy_image[left: left + size_of_tiles, 
@@ -41,9 +42,7 @@ class Image_Preprocessor():
             leeway -= 4
         top_left_of_tiles = np.arange(self.number_of_tiles_per_side)*size_of_possible_tiles 
 
-        return(top_left_of_tiles, leeway)
-
-        
+        return top_left_of_tiles, leeway
 
     def create_puzzle(self, image, permutation=None, random_seed=None):
         """
@@ -60,12 +59,15 @@ class Image_Preprocessor():
 
         # easier for region selection
         numpy_image = convert_to_numpy(image)
-
         top_left_of_tiles, leeway = self._get_top_left_and_leeway(image.size)
         for i, left in enumerate(top_left_of_tiles):
             for j, top in enumerate(top_left_of_tiles):
-                left_plus_offset = left + np.random.randint(leeway)
-                top_plus_offset = top + np.random.randint(leeway)
+                if leeway > 0:
+                    left_plus_offset = left + np.random.randint(leeway)
+                    top_plus_offset = top + np.random.randint(leeway)
+                else:
+                    left_plus_offset = left
+                    top_plus_offset = top
                 tile = self.get_tile(numpy_image, left_plus_offset, top_plus_offset, self.size_of_tiles, random_seed)
                 if self.normalize:
                     tile = (tile - np.mean(tile))/(np.std(tile) + epsilon) + 1
@@ -74,8 +76,23 @@ class Image_Preprocessor():
         if permutation is not None:
             puzzle = puzzle[permutation, :, :, :]
 
+        return puzzle
 
-        return(puzzle)
+    def create_image_np(self, tiles_np, permutation):
+        """
+        Creates an image from a set of tiles and a permutation
+        """
+        num_tiles = 3
+        tile_size = np.int(tiles_np.shape[2])
+        image_assembled = np.zeros((3, num_tiles * tile_size, num_tiles * tile_size), dtype=np.uint8)
+
+        # easier for region selection
+        for i in range(num_tiles):
+            for j in range(num_tiles):
+                tile_index = int(np.where(permutation == i * num_tiles + j)[0])
+                image_assembled[:, i * tile_size: (i+1) * tile_size, j * tile_size: (j+1) * tile_size] = tiles_np[tile_index]
+
+        return image_assembled
 
     def convert_black_and_white(self, image):
         if np.random.rand() < self.black_and_white_proportion:
@@ -83,7 +100,7 @@ class Image_Preprocessor():
             return(image.convert('L'))
         else:
             self.black_and_white = False
-            return(image)
+            return image
 
     def resize_keep_aspect_ratio(self, image):
         width, height = image.size
@@ -94,7 +111,7 @@ class Image_Preprocessor():
         image_shape *= ratio
         image_shape = np.round(image_shape).astype(np.int).T
         image = image.resize(image_shape, Image.BILINEAR)
-        return(image)
+        return image
 
     def square_crop_image(self, image,):
         width, height = image.size
@@ -111,7 +128,7 @@ class Image_Preprocessor():
 
         croped_image = image.crop((left, top, right, bottom))
 
-        return(croped_image)
+        return croped_image
 
 if __name__=="__main__":
     #for i in range(100):
