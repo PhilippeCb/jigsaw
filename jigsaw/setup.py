@@ -24,7 +24,7 @@ setup(name='jigsaw',
       # using >= and <, to allow for future updates.
       # TODO: torch
       install_requires=[
-          'numpy==1.13.1',
+          'numpy==1.22.0',
           'pillow==5.1.0',
       ],
 
