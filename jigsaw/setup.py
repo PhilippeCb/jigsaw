@@ -25,7 +25,7 @@ setup(name='jigsaw',
       # TODO: torch
       install_requires=[
           'numpy==1.13.1',
-          'pillow==5.1.0',
+          'pillow==10.0.1',
       ],
 
       # Development requirements
